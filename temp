@@ -1,0 +1,63 @@
+## Question 8:
+Budweiser would also like to investigate the difference with respect to IBU and ABV between IPAs (India Pale Ales) and other types of Ale (any beer with “Ale” in its name other than IPA).  You decide to use KNN classification to investigate this relationship.  Provide statistical evidence one way or the other. You can of course assume your audience is comfortable with percentages … KNN is very easy to understand conceptually.
+
+In ##addition, while you have decided to use KNN to investigate this relationship (KNN is required) you may also feel free to supplement your response to this question with any other methods or techniques you have learned.  Creativity and alternative solutions are always encouraged.
+
+*A category variable IPA_Ale is created to split all the 2410 beers into three groups: Ale (1007), IPA (571) and Other (832), we only use the first two groups for analysis in this part. A KNN classification model with a 75% split and 50 iteration results in an 80% classification accuracy as shown in the confusion matrix. This was achieve by trying 30 different K values resulting in K=5 as the optimal value as shown.*
+```{r}
+#table(tidyDF$IPA_Ale)
+# Ale:963, IPA:571, Other:876
+# Check the Ale: 2nd time with regex():
+# Ale:1007, IPA:571, Other:832
+
+tidyDF.knn <- tidyDF %>% filter(IPA_Ale == "IPA" | IPA_Ale == "Ale")
+
+set.seed(1257)
+splitPerc = .75
+iterations = 50
+numks = 30
+
+masterAcc = matrix(nrow = iterations, ncol = numks)
+
+for(j in 1:iterations)
+{
+  accs = data.frame(accuracy = numeric(30), k = numeric(30))
+  trainIndices = sample(1:dim(tidyDF.knn)[1],round(splitPerc * dim(tidyDF.knn)[1]))
+  train = tidyDF.knn[trainIndices,]
+  test = tidyDF.knn[-trainIndices,]
+  for(i in 1:numks)
+    {
+    classifications = knn(train[,c(4,5)],test[,c(4,5)],train$IPA_Ale, prob = TRUE, k = i)
+    #table(classifications,test$IPA_Ale)
+    CM = confusionMatrix(table(classifications,test$IPA_Ale))
+    masterAcc[j,i] = CM$overall[1]
+  }
+}
+
+MeanAcc = colMeans(masterAcc)
+maxMeanAcc = max(MeanAcc) # k=?
+plot(seq(1,numks,1),MeanAcc, type = "l")
+bestK <- which.max(MeanAcc)
+paste0("bestK: ",bestK,", Avg Accuracy: ",max(MeanAcc))
+
+classifications5 = knn(train[,c(4,5)],test[,c(4,5)],train$IPA_Ale, prob = TRUE, k = 5)
+CM5 = confusionMatrix(table(classifications5,test$IPA_Ale))
+CM5
+
+# Check Budweiser profile
+# Neither Budweiser nor Anheuser-Busch can be found in list of Brewery_name
+# We cannot build Budweiser profile with the available data set
+# Benchmarking with competitors will not be realistic
+tidyDF$BudweiserOrOther <- ifelse(str_detect(tidyDF$Brewery_name,regex("Budweiser", ignore_case = TRUE)),"Budweiser","Other")
+table(tidyDF$BudweiserOrOther)
+head(tidyDF %>% filter(BudweiserOrOther=="Budweiser"),n=50)
+```
+
+
+
+## Question 9:
+Knock their socks off!  Find one other useful inference from the data that you feel Budweiser may be able to find value in.  You must convince them why it is important and back up your conviction with appropriate statistical evidence.
+```{r}
+
+```
+
