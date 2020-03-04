@@ -134,7 +134,8 @@ theme_set(theme_classic())
 
 ## Load Data
 ```{r}
-setwd("C:/Personal/SMU/DDS6306/Unit8-9")
+#setwd("C:/Personal/SMU/DDS6306/Unit8-9")
+setwd("C:/Users/thads/OneDrive/SMU Data Science/DS6306/DDS6306-Group-Project-1")
 
 beers_df <- read.csv("./data/Beers.csv", header = T, sep = ",")
 breweries_df <-  read.csv("./data/Breweries.csv", header = T, sep = ",")
@@ -704,7 +705,44 @@ market
 
 
 
+#map example
+```{r}
 
+
+Brew_Cities = group_by(beer_brewery_merged_df, City, State)
+Brew_Cities = summarize(Brew_Cities,count = n())
+data <- world.cities %>% filter(country.etc=="USA")
+try(data <- rename(data, City = name))
+
+Brew_Cities <- right_join(data, Brew_Cities, by="City")
+Brew_Cities <- Brew_Cities %>% na.omit()
+
+
+library(plotly)
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5
+)
+
+fig <- plot_geo(Brew_Cities, locationmode='USA -states', sizes =c(1,250))
+fig <- fig %>% add_markers(x = ~long, y = ~lat, size = ~count, color = ~count, hoverinfo = "text",
+    text = ~paste(City, State, paste("Breweries:", count), sep = "<br />"),
+    size = I(8), 
+  )
+fig <- fig %>% colorbar(title = "Breweries")
+fig <- fig %>% layout(
+    title = 'US Breweries', geo = g
+  )
+
+fig
+
+```
 
 
 
